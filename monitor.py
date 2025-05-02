@@ -1,92 +1,62 @@
+import os
 import requests
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-current_time = datetime.now().time()
+from dotenv import load_dotenv
+
+load_dotenv()
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# Load from .env
+PRODUCT_URL = os.getenv("PRODUCT_URL")
+TARGET_PRICE = float(os.getenv("TARGET_PRICE"))
+
+EMAIL_FROM = os.getenv("EMAIL_FROM")
+EMAIL_TO = os.getenv("EMAIL_TO")
+EMAIL_PASS = os.getenv("EMAIL_APP_PASS")
 
 
-response = requests.get('https://catalog.extra.ge/api/products/dell-p2723qe-lcd-monitor-27-monitori/747028?requestId=bbd0b0db-e2d0-e820-16df-1a6a748c7bd0')
+def send_email(subject, body):
+    email = MIMEMultipart()
+    email["From"] = EMAIL_FROM
+    email["To"] = EMAIL_TO
+    email["Subject"] = subject
+    email.attach(MIMEText(body, "plain"))
 
-jsondata = response.json()
-product = jsondata['data']['product']
-
-productPrice = product['sellPrice']
-productOriginalSlug = product['productOriginalSlug']
-modelId = product['modelId']
-id = product['id']
+    with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+        smtp.starttls()
+        smtp.login(EMAIL_FROM, EMAIL_PASS)
+        smtp.send_message(email)
 
 
-def send_email (param):
-    if param == 'ok':
-        # Email configuration
-        sender_email = "gurami.ivanidze.96@gmail.com"
-        sender_password = "ParoliSkullbusher12"
-        receiver_email = "gurami151097@gmail.com"
-        subject = f"Its Your chance To buy {productOriginalSlug} "
-        message = f''' 
-        time to buy !!!!!
-        product: {product['title']}
-        price: {productPrice}
-        time: {current_time}
-        '''
-        app_pass = 'mfilnqtlctuwaipi'
-        # Create the email
-        email = MIMEMultipart()
-        email["From"] = sender_email
-        email["To"] = receiver_email
-        email["Subject"] = subject
-        email.attach(MIMEText(message, "plain"))
+def check_price():
+    response = requests.get(PRODUCT_URL)
+    data = response.json()["data"]["product"]
 
-        # Connect to the SMTP server
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
-        smtp_connection = smtplib.SMTP(smtp_server, smtp_port)
-        smtp_connection.starttls()
+    product_title = data["title"]
+    product_price = data["sellPrice"]
+    product_slug = data["productOriginalSlug"]
 
-        # Login to your account
-        smtp_connection.login(sender_email, app_pass)
-
-        # Send the email
-        smtp_connection.sendmail(sender_email, receiver_email, email.as_string())
-
-        # Close the connection
-        smtp_connection.quit()
+    if (
+        product_price < TARGET_PRICE
+        and product_slug == "dell-p2723qe-lcd-monitor-27-monitori"
+    ):
+        send_email(
+            f"🔥 Deal Alert: {product_slug}",
+            f"""Time to buy!
+Product: {product_title}
+Current Price: ₾{product_price}
+Time: {current_time}
+""",
+        )
     else:
-        # Email configuration
-        sender_email = "gurami.ivanidze.96@gmail.com"
-        sender_password = "ParoliSkullbusher12"
-        receiver_email = "gurami151097@gmail.com"
-        subject = f"cron started "
-        message = f''' 
-        cron started but price not shemcirda
-        time: {current_time}
-        '''
-        app_pass = 'mfilnqtlctuwaipi'
-        # Create the email
-        email = MIMEMultipart()
-        email["From"] = sender_email
-        email["To"] = receiver_email
-        email["Subject"] = subject
-        email.attach(MIMEText(message, "plain"))
-
-        # Connect to the SMTP server
-        smtp_server = "smtp.gmail.com"
-        smtp_port = 587
-        smtp_connection = smtplib.SMTP(smtp_server, smtp_port)
-        smtp_connection.starttls()
-
-        # Login to your account
-        smtp_connection.login(sender_email, app_pass)
-
-        # Send the email
-        smtp_connection.sendmail(sender_email, receiver_email, email.as_string())
-
-        # Close the connection
-        smtp_connection.quit()
+        send_email(
+            "⏱️ Cron Executed - No Price Drop",
+            f"Checked at: {current_time}\nCurrent price: ₾{product_price}",
+        )
 
 
-if productPrice<1000 and productOriginalSlug =="dell-p2723qe-lcd-monitor-27-monitori" and modelId == 113333 and id ==747028 :
-    send_email('ok')
-else:
-    send_email("notLower")
+if __name__ == "__main__":
+    check_price()
