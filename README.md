@@ -17,10 +17,10 @@ If the product's price falls below your target, it sends you an email notificati
    cd extra-ge-price-tracker
 ```
 
-> Install dependencies:
-```
-pip install python-dotenv
-```
+Install dependencies:
+
+> pip install python-dotenv
+
 
 >Create a .env file:
 
