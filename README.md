@@ -12,17 +12,18 @@ If the product's price falls below your target, it sends you an email notificati
 ## 🔧 Setup
 
 1. Clone the repo:
-   ```bash
+   ```
+   bash
    git clone https://github.com/yourusername/extra-ge-price-tracker.git
    cd extra-ge-price-tracker
+   ```
+
+2. Install dependencies:
+```
+pip install python-dotenv
 ```
 
-Install dependencies:
-
-> pip install python-dotenv
-
-
->Create a .env file:
+3. Create a .env file:
 
 ```
 PRODUCT_URL=https://catalog.extra.ge/api/products/dell-p2723qe-lcd-monitor-27-monitori/747028
